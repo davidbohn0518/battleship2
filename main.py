@@ -1,4 +1,6 @@
 import random
+from turtle import position
+from unicodedata import name
 
 ships = {"destroyer": 2,
          "cruiser": 3,
@@ -40,7 +42,6 @@ class GameBoard(object):
         rows_to_nums = {"A": 0,"B": 1,"C": 2,"D": 3,"E": 4,"F": 5,"G": 6,"H": 7,"I": 8}
         return rows_to_nums.get(row)
         
-    
     def print_board(self):
         print('  1 2 3 4 5 6 7 8 9')
         print('  -----------------')
@@ -49,13 +50,19 @@ class GameBoard(object):
             row_letter = ROWS[row_number]
             print('{}|{}|'.format(row_letter, "|".join(row)))
             row_number +=1
-        
+
+    def ship_lookup(self, position):
+        for s in self.ships:
+            if s.positions == position:
+                return s
+
 
 class Ship(object):
     def __init__(self, name: str, hit_points: int, positions: list):
         self.name = name
         self.hit_points = hit_points
         self.positions = positions
+        self.alive = True
 
     def valid_directions(self, position: list, hit_points):
         directions = ["north", "south", "east", "west"]
@@ -71,31 +78,49 @@ class Ship(object):
 
             return directions
 
+    def fire_shot(self, tboard, gboard) -> list:
+        target = get_location()
+        
+        if gboard[GameBoard.covert_rows_to_nums(target[0])][target[1]-1] != " ":
+            print("You have already guessed this location ")
+        elif tboard[GameBoard.covert_rows_to_nums(target[0])][target[1]] == "X":
+            ship = tboard.ship_lookup(target)
+            print("You hit the opponents {}".format(ship.name))
+            gboard[GameBoard.covert_rows_to_nums(target[0])][int(target[1])] = "X"
+            ship.alive = False
+        else:
+            print("You missed!")
+            gboard[GameBoard.covert_rows_to_nums(target[0])][int(target[1])] = "O"
 
-    def get_position() -> list:
-        row = "-"
-        column = "0"
+def get_location():
+    row = "-"
+    col = "0"
 
-        while row not in ROWS:
-            print(f"Possible rows: {ROWS}")
-            row = input("Please enter the row you would like to target: ")
-            if row not in ROWS:
-                print("Invalid selection, Please enter a valid row")
+    while row not in ROWS:
+        print(f"Possible rows: {ROWS}")
+        row = input("Please enter the row you would like to target: ")
+        if row not in ROWS:
+            print("Invalid selection, Please enter a valid row")
 
-        while column not in COLUMNS:
-            print(f"Possible columns: {COLUMNS}")
-            column = input("Please enter the column you would like to target: ")
-            if column not in COLUMNS:
-                print("Invalid selection, Please enter a valid column")
+    while col not in COLUMNS:
+        print(f"Possible columns: {COLUMNS}")
+        col = input("Please enter the column you would like to target: ")
+        if col not in COLUMNS:
+            print("Invalid selection, Please enter a valid column")
 
-        target = [row, column]
-        return target
+    target = [row, col]
+    return target           
+        
 
 def run_game():
-    board_cpu, board_player = GameBoard(), GameBoard()
+    board_cpu, board_guess, board_player = GameBoard(), GameBoard(), GameBoard()
     board_player.add_ships()
+    board_cpu.add_ships()
+    board_guess.print_board()
     board_player.print_board()
 
+    
+    
 if __name__ == "__main__":
    run_game()
     
