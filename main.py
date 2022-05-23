@@ -1,6 +1,5 @@
 import random
-from turtle import position
-from unicodedata import name
+
 
 ships = {"destroyer": 2,
          "cruiser": 3,
@@ -32,9 +31,9 @@ class GameBoard(object):
         Check to see is random position on self.board == 'X'
         Then instantiate a ship object and set self.board to of random postion to 'X'"""
         for name, hp in ships.items():
-            rand_x, rand_y = random.choice(ROWS), random.choice(COLUMNS)
+            rand_x, rand_y = get_random_location()
             while self.board[GameBoard.covert_rows_to_nums(rand_x)][int(rand_y)-1] == "X":
-                rand_x, rand_y = random.choice(ROWS), random.choice(COLUMNS)
+                rand_x, rand_y = get_random_location()
             self.ships.append(Ship(name, hp, [rand_x, rand_y]))
             self.board[GameBoard.covert_rows_to_nums(rand_x)][int(rand_y)-1] = "X"
 
@@ -55,6 +54,13 @@ class GameBoard(object):
         for s in self.ships:
             if s.positions == position:
                 return s
+
+    def alive_check(self):
+        for ship in self.ships:
+            if ship.alive == True:
+                return True
+            else:
+                return False
 
 
 class Ship(object):
@@ -78,11 +84,12 @@ class Ship(object):
 
             return directions
 
-    def fire_shot(self, tboard, gboard) -> list:
-        target = get_location()
+    def fire_shot(self, location, tboard, gboard) -> list:
+        target = location
         
         if gboard[GameBoard.covert_rows_to_nums(target[0])][target[1]-1] != " ":
             print("You have already guessed this location ")
+            target = get_location()
         elif tboard[GameBoard.covert_rows_to_nums(target[0])][target[1]] == "X":
             ship = tboard.ship_lookup(target)
             print("You hit the opponents {}".format(ship.name))
@@ -91,6 +98,11 @@ class Ship(object):
         else:
             print("You missed!")
             gboard[GameBoard.covert_rows_to_nums(target[0])][int(target[1])] = "O"
+            gboard.guesses.append(target)
+
+def get_random_location():
+    rand_x, rand_y = random.choice(ROWS), random.choice(COLUMNS)
+    return [rand_x, rand_y]
 
 def get_location():
     row = "-"
@@ -108,16 +120,18 @@ def get_location():
         if col not in COLUMNS:
             print("Invalid selection, Please enter a valid column")
 
-    target = [row, col]
-    return target           
+    return [row, col]
+               
         
 
 def run_game():
     board_cpu, board_guess, board_player = GameBoard(), GameBoard(), GameBoard()
     board_player.add_ships()
     board_cpu.add_ships()
-    board_guess.print_board()
-    board_player.print_board()
+    
+    while board_player.alive_check() or board_cpu.alive_check():
+        board_guess.print_board()
+        board_player.print_board()
 
     
     
