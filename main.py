@@ -32,15 +32,11 @@ class GameBoard(object):
         Then instantiate a ship object and set self.board to of random postion to 'X'"""
         for name, hp in ships.items():
             rand_x, rand_y = get_random_location()
-            while self.board[GameBoard.covert_rows_to_nums(rand_x)][int(rand_y)-1] == "X":
+            while self.board[covert_rows_to_nums(rand_x)][int(rand_y)-1] == "X":
                 rand_x, rand_y = get_random_location()
             self.ships.append(Ship(name, hp, [rand_x, rand_y]))
-            self.board[GameBoard.covert_rows_to_nums(rand_x)][int(rand_y)-1] = "X"
-
-    def covert_rows_to_nums(row) -> int:
-        rows_to_nums = {"A": 0,"B": 1,"C": 2,"D": 3,"E": 4,"F": 5,"G": 6,"H": 7,"I": 8}
-        return rows_to_nums.get(row)
-        
+            self.board[covert_rows_to_nums(rand_x)][int(rand_y)-1] = "X"
+     
     def print_board(self):
         print('  1 2 3 4 5 6 7 8 9')
         print('  -----------------')
@@ -56,11 +52,14 @@ class GameBoard(object):
                 return s
 
     def alive_check(self):
+        counter = 0
         for ship in self.ships:
-            if ship.alive == True:
-                return True
-            else:
+            if counter == len(self.ships):
                 return False
+            if ship.alive == False:
+                counter += 1
+            else:
+                return True
 
 
 class Ship(object):
@@ -84,21 +83,40 @@ class Ship(object):
 
             return directions
 
-    def fire_shot(self, location, tboard, gboard) -> list:
+    def fire_shot(self, location: list, tboard: GameBoard, gboard: GameBoard):
         target = location
         
-        if gboard[GameBoard.covert_rows_to_nums(target[0])][target[1]-1] != " ":
-            print("You have already guessed this location ")
+        while gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] != " ":
+            print("You have already guessed this location. Please Try Again")
             target = get_location()
-        elif tboard[GameBoard.covert_rows_to_nums(target[0])][target[1]] == "X":
+        if tboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] == "X":
             ship = tboard.ship_lookup(target)
-            print("You hit the opponents {}".format(ship.name))
-            gboard[GameBoard.covert_rows_to_nums(target[0])][int(target[1])] = "X"
+            print("You sank the opponents {}".format(ship.name))
+            gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "X"
             ship.alive = False
         else:
             print("You missed!")
-            gboard[GameBoard.covert_rows_to_nums(target[0])][int(target[1])] = "O"
+            gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "O"
             gboard.guesses.append(target)
+
+    def cpu_ai(self, location: list, tboard: GameBoard, gboard: GameBoard):
+        target = location
+        while gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] != " ":
+            target = get_random_location()
+        if tboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] == "X":
+            ship = tboard.ship_lookup(target)
+            print("Your oppenant sank your {}".format(ship.name))
+            gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "X"
+            ship.alive = False
+        else:
+            gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "O"
+            gboard.guesses.append(target)
+            print("Your opponent missed!")
+
+
+def covert_rows_to_nums(row) -> int:
+    rows_to_nums = {"A": 0,"B": 1,"C": 2,"D": 3,"E": 4,"F": 5,"G": 6,"H": 7,"I": 8}
+    return rows_to_nums.get(row)
 
 def get_random_location():
     rand_x, rand_y = random.choice(ROWS), random.choice(COLUMNS)
@@ -125,14 +143,20 @@ def get_location():
         
 
 def run_game():
-    board_cpu, board_guess, board_player = GameBoard(), GameBoard(), GameBoard()
+    board_cpu, board_cguess, board_pguess, board_player = GameBoard(), GameBoard(), GameBoard(), GameBoard()
     board_player.add_ships()
     board_cpu.add_ships()
     
-    while board_player.alive_check() or board_cpu.alive_check():
-        board_guess.print_board()
+    while board_player.alive_check() and board_cpu.alive_check():
+        board_pguess.print_board()
         board_player.print_board()
+        board_player.ships[0].fire_shot(get_location(), board_cpu, board_pguess)
+        board_cpu.ships[0].cpu_ai(get_random_location(), board_player, board_cguess)
 
+    if board_player.alive_check():
+        print("Well Done! You WIN!!!!")
+    else:
+        print("What's the matter?!? The computer too good for you? TRY AGAIN!!!")
     
     
 if __name__ == "__main__":
