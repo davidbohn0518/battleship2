@@ -83,37 +83,37 @@ class Ship(object):
 
             return directions
 
-    def fire_shot(self, location: list, tboard: GameBoard, gboard: GameBoard):
-        target = location
-        
-        while gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] != " ":
-            print("You have already guessed this location. Please Try Again")
-            target = get_location()
-        if tboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] == "X":
-            ship = tboard.ship_lookup(target)
-            print("You sank the opponents {}".format(ship.name))
-            gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "X"
-            ship.alive = False
-        else:
-            print("You missed!")
-            gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "O"
-            gboard.guesses.append(target)
+def fire_shot(tboard: GameBoard, gboard: GameBoard):
+    target = get_location()
+    
+    while gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] != " ":
+        print("You have already guessed this location. Please Try Again")
+        target = get_location()
+    if tboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] == "X":
+        ship = tboard.ship_lookup(target)
+        print("You sank the opponents {}".format(ship.name))
+        gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "X"
+        ship.alive = False
+    else:
+        print("You missed!")
+        gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "O"
+        gboard.guesses.append(target)
 
-    def cpu_ai(self, location: list, tboard: GameBoard, gboard: GameBoard):
-        target = location
-        while gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] != " ":
-            target = get_random_location()
-        if tboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] == "X":
-            ship = tboard.ship_lookup(target)
-            print("Your oppenant sank your {}".format(ship.name))
-            gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "X"
-            ship.alive = False
-        else:
-            gboard.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "O"
-            gboard.guesses.append(target)
-            print("Your opponent missed!")
+def cpu_ai(board: GameBoard):
+    target = get_random_location()
 
-
+    while board.board[covert_rows_to_nums(target[0])][int(target[1])-1] != " " and board.board[covert_rows_to_nums(target[0])][int(target[1])-1] != "X":
+        target = get_random_location()
+    if board.board[covert_rows_to_nums(target[0])][int(target[1])-1] == "X":
+        ship = board.ship_lookup(target)
+        print("Your oppenant sank your {}".format(ship.name))
+        board.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "^"
+        ship.alive = False
+    else:
+        board.board[covert_rows_to_nums(target[0])][int(target[1])-1] = "O"
+        board.guesses.append(target)
+        print("Your opponent missed!")
+            
 def covert_rows_to_nums(row) -> int:
     rows_to_nums = {"A": 0,"B": 1,"C": 2,"D": 3,"E": 4,"F": 5,"G": 6,"H": 7,"I": 8}
     return rows_to_nums.get(row)
@@ -143,15 +143,15 @@ def get_location():
         
 
 def run_game():
-    board_cpu, board_cguess, board_pguess, board_player = GameBoard(), GameBoard(), GameBoard(), GameBoard()
+    board_cpu, board_pguess, board_player = GameBoard(), GameBoard(), GameBoard()
     board_player.add_ships()
     board_cpu.add_ships()
     
     while board_player.alive_check() and board_cpu.alive_check():
         board_pguess.print_board()
         board_player.print_board()
-        board_player.ships[0].fire_shot(get_location(), board_cpu, board_pguess)
-        board_cpu.ships[0].cpu_ai(get_random_location(), board_player, board_cguess)
+        fire_shot(board_cpu, board_pguess)
+        cpu_ai(board_player)
 
     if board_player.alive_check():
         print("Well Done! You WIN!!!!")
